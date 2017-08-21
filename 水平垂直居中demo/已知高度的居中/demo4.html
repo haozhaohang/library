@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>实现已知高度的垂直居中</title>
+
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        .containers {
+            height: 100%;
+            position: relative;
+        }
+
+        span {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            top: calc(50% - 50px);
+            left: calc(50% - 50px);
+        }
+    </style>
+
+</head>
+<body>
+    <div class="containers">
+        <span>calc() 实现垂直居中</span>
+    </div>
+</body>
+</html>
