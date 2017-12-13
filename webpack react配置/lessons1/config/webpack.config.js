@@ -32,7 +32,7 @@ module.exports = {
     },
 
     // 插件配置
-    plugins: {
+    plugins: [
         generateIndex
-    }
+    ]
 }

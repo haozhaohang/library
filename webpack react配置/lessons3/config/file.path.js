@@ -14,5 +14,6 @@ const indexHtmlPath = resolve(mainPath, 'index.html')
 module.exports = {
     srcPath,
     mainPath,
-    indexJsPath
+    indexJsPath,
+    indexHtmlPath
 }
