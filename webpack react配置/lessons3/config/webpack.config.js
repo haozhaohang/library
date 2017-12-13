@@ -29,5 +29,10 @@ module.exports = {
                 use: 'babel-loader'
             }
         ]
+    },
+
+    // 插件配置
+    plugins: {
+        generateIndex
     }
 }
