@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>属性劫持</title>
+
+    <style>
+        #app {
+            text-align: center;
+        }
+    </style>
+
+</head>
+<body>
+    <div id="app">
+        <form>
+            <input type="text" v-model="number">
+            <button type="button" v-click="add">增加</button>
+        </form>
+        <h3 v-bind="number"></h3>
+    </div>
+
+    <script>
+        function MyVue(params) {
+            this._init(params)
+        }
+
+        MyVue.prototype._init = function (params) {
+            const { el, data, methods } = params
+
+            this.$params = params
+            this.$el = document.querySelector(el)
+            this.$data = data
+            this.$methods = methods
+
+            this._binding = {}
+            this._observe(this.$data)
+            this._compile(this.$el)
+        }
+
+        MyVue.prototype._observe = function (data) {
+            const _this = this
+            Object.keys(data).forEach(key => {
+                if (data.hasOwnProperty(key)) {
+                    let value = data[key]
+                    this._binding[key] = {
+                        _directives: []
+                    }
+                    this._observe(value)
+
+                    Object.defineProperty(data, key, {
+                        enumerable: true,
+                        configurable: true,
+                        get() {
+                            return value
+                        },
+                        set(newValue) {
+                            if (value !== newValue) {
+                                value = newValue
+                                _this._binding[key]._directives.forEach(item => {
+                                    item._updata()
+                                })
+                            }
+                        }
+                    })
+                }
+            })
+        }
+
+        MyVue.prototype._compile = function (root) {
+            const _this = this
+            const nodes = root.children;
+            Object.values(nodes).forEach(nodeChild => {
+                if (nodeChild.children.length) {
+                    this._compile(nodeChild)
+                }
+
+                if (nodeChild.hasAttribute('v-click')) {
+                    nodeChild.addEventListener('click', (function (params) {
+                        const attrVal = nodeChild.getAttribute('v-click');
+                        return _this.$methods[attrVal].bind(_this.$data)
+                    })())
+                }
+
+                if (nodeChild.hasAttribute('v-model') && (nodeChild.tagName = 'INPUT' || nodeChild.tagName == 'TEXTAREA')) {
+                    nodeChild.addEventListener('input', (function (params) {
+                        var attrVal = nodeChild.getAttribute('v-model');
+                        _this._binding[attrVal]._directives.push(
+                            new Watcher({
+                                el: nodeChild,
+                                vm: _this,
+                                exp: attrVal,
+                                attr: 'value'
+                            })
+                        )
+
+                        return function () {
+                            _this.$data[attrVal] = nodeChild.value;
+                        }
+                    })())
+                }
+
+                if (nodeChild.hasAttribute('v-bind')) {
+                    const attrVal = nodeChild.getAttribute('v-bind');
+                    _this._binding[attrVal]._directives.push(
+                        new Watcher({
+                            el: nodeChild,
+                            vm: _this,
+                            exp: attrVal,
+                            attr: 'innerHTML'
+                        })
+                    )
+                }
+            })
+        }
+
+        function Watcher({ el, vm, exp, attr }) {
+            this.el = el
+            this.vm = vm
+            this.exp = exp
+            this.attr = attr
+
+            this._updata()
+        }
+
+        Watcher.prototype._updata = function () {
+            this.el[this.attr] = this.vm.$data[this.exp]
+        }
+
+        const app = new MyVue({
+            el: '#app',
+            data: {
+                number: 0,
+            },
+            methods: {
+                add() {
+                    this.number ++
+                }
+            }
+        })
+    </script>
+</body>
+</html>

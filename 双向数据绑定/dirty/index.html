@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>脏检查</title>
+    <style>
+        #app {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <form style="margin: auto">
+            <input type='text' ng-model="data.number"></input>
+            <button type="button" onclick="scope.data.add()">增加</button>
+        </form>
+
+        <p ng-model="data.number"></p>
+    </div>
+</body>
+<script>
+    const Scope = function () {
+        this.watchers = [];
+
+        const _this = this;
+        const elements = document.querySelectorAll('[ng-model]');
+
+        for (let i = 0, len = elements.length; i < len; i++) {
+
+            (function (i) {
+                _this.watch(function () {
+                    return _this.str2PropGet(elements[i].getAttribute('ng-model'));
+                }, function () {
+                    const elementType = elements[i].tagName.toLowerCase();
+
+                    if (elementType === 'input' || elementType === 'textarea' || elementType === 'select') {
+                        elements[i].value = _this.str2PropGet(elements[i].getAttribute('ng-model'));
+                    } else {
+                        elements[i].innerHTML = _this.str2PropGet(elements[i].getAttribute('ng-model'));
+                    }
+                });
+            })(i);
+
+        }
+
+        function pageElementEventHandler(e) {
+            const target = e.target || e.srcElemnt;
+            const fullPropName = target.getAttribute('ng-model');
+
+            if (fullPropName && fullPropName !== '') {
+                _this.str2PropSet(target.getAttribute('ng-model'), target.value);
+                _this.digest();
+            }
+
+        }
+
+        if (document.addEventListener) {
+            document.addEventListener('keyup', pageElementEventHandler, false);
+            document.addEventListener('change', pageElementEventHandler, false);
+        } else {
+            document.attachEvent('onkeyup', pageElementEventHandler);
+            document.attachEvent('onchange', pageElementEventHandler);
+        }
+
+    };
+
+
+
+    Scope.prototype.watch = function (watchExp, callback) {
+        this.watchers.push({
+            watchExp: watchExp,
+            callback: callback || function () { }
+        });
+
+    }
+
+    Scope.prototype.digest = function () {
+        let dirty;
+
+        do {
+            dirty = false;
+
+            for (let i = 0; i < this.watchers.length; i++) {
+                const newVal = this.watchers[i].watchExp(),
+                    oldVal = this.watchers[i].last;
+
+                if (newVal !== oldVal) {
+                    this.watchers[i].callback(newVal, oldVal);
+                    dirty = true;
+                    this.watchers[i].last = newVal;
+                }
+            }
+        } while (dirty);
+
+    }
+
+    Scope.prototype.str2PropGet = function (propPath) {
+        const props = propPath.split('.');
+        let result = this;
+
+        for (let i = 0; i < props.length; i++) {
+            result = result[props[i]];
+        }
+        return result;
+    }
+
+    Scope.prototype.str2PropSet = function (propPath, value) {
+        const props = propPath.split('.');
+        let result = this;
+
+        for (var i = 0; i < props.length - 1; i++) {
+            result = result[props[i]];
+        }
+
+        result[props[i]] = value;
+    }
+
+    const scope = new Scope();
+
+    scope.data = {
+        number: 0
+    };
+
+    scope.data.add = function() {
+        scope.data.number += 1;
+        scope.digest();
+    }
+
+    // manually run the digest during the initializtion stage
+    scope.digest();
+
+
+
+</script>
+
+</html>
