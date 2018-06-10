@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>node中间层实现文件上传</title>
+</head>
+<body>
+    <div class="wrap">
+        <!-- 通过form表单提交 -->
+        <form method="post" enctype="multipart/form-data" action="/api/upload">
+            <input type="text" name="username">
+            <input type="password" name="password">
+            <input type="file" name="file">
+            <input type="submit">
+        </form>
+
+        <!-- 获取上传文件转成formData类型的文件 -->
+        <input multiple id="file" name="file" type="file" />
+        <button id="btn">提交</button>
+    </div>
+    <script>
+        const oFile = document.getElementById('file')
+        const oBtn = document.getElementById('btn')
+
+        oBtn.addEventListener('click', () => {
+            files = oFile.files
+            const formData = new FormData()
+            formData.append('file', files[0])
+            formData.append('file1', files[1])
+
+            fetch('/api/upload', {
+                method: "POST",
+                body: formData
+            })
+        })
+    </script>
+</body>
+</html>
